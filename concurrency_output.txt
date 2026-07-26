@@ -1,0 +1,11 @@
+=== Two simultaneous requests for 2026-10-10, Afternoon slot ===
+
+clerk_A: HTTP 201
+  {"applicant_id":16,"booking_date":"2026-10-10","booking_id":34,"slot_id":2,"slot_name":"Afternoon","status":"confirmed"}
+
+
+clerk_B: HTTP 409
+  {"error":"slot 'Afternoon' on 2026-10-10 is already booked (booking #34)"}
+
+
+RESULT: exactly one request succeeded (201) and the other was refused (409). PASS

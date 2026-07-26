@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book the Hall — Community Hall Register</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="masthead">
+  <div class="wrap">
+    <div>
+      <h1>Community Hall Register</h1>
+      <div class="sub">Panchayat Office · Booking Counter</div>
+    </div>
+    <nav class="tabs">
+      <a href="index.html" class="active">Book</a>
+      <a href="calendar.html">Calendar</a>
+      <a href="deposits.html">Deposits</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="panel">
+    <h2>New Booking</h2>
+    <p class="hint">Enter the date first — what is already booked that day appears below before you finish the form.</p>
+    <div id="formMsg" class="msg"></div>
+
+    <form id="bookingForm">
+      <div class="field-row">
+        <div>
+          <label for="applicant_name">Applicant / family name</label>
+          <input type="text" id="applicant_name" required>
+        </div>
+        <div>
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" required>
+        </div>
+      </div>
+      <div class="field-row single">
+        <div>
+          <label for="address">Address (optional)</label>
+          <input type="text" id="address">
+        </div>
+      </div>
+      <div class="field-row">
+        <div>
+          <label for="booking_date">Date</label>
+          <input type="date" id="booking_date" required>
+        </div>
+        <div>
+          <label for="slot_id">Slot</label>
+          <select id="slot_id" required></select>
+        </div>
+      </div>
+      <div class="field-row single">
+        <div>
+          <label for="purpose">Purpose</label>
+          <input type="text" id="purpose" placeholder="e.g. Wedding, Committee meeting">
+        </div>
+      </div>
+      <button type="submit" id="submitBtn">Record Booking</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>Already on the register for this date</h2>
+    <p class="hint">Updates the moment a date is entered — one query, no page reload.</p>
+    <div id="dayPreview" class="day-preview">
+      <div class="empty">Pick a date above to see the day.</div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="note">SIH 2026 Practical Assessment — Community Hall Booking and Conflict Prevention System</footer>
+
+<script src="js/api.js"></script>
+<script>
+const slotSelect = document.getElementById("slot_id");
+const dateInput = document.getElementById("booking_date");
+const preview = document.getElementById("dayPreview");
+const formMsg = document.getElementById("formMsg");
+const form = document.getElementById("bookingForm");
+const submitBtn = document.getElementById("submitBtn");
+
+let allSlots = [];
+
+async function loadSlots() {
+  allSlots = await API.get("/api/slots");
+  slotSelect.innerHTML = allSlots.map(s =>
+    `<option value="${s.slot_id}">${s.slot_name} (${s.start_time}–${s.end_time})</option>`
+  ).join("");
+}
+
+async function refreshDayPreview() {
+  const date = dateInput.value;
+  if (!date) {
+    preview.innerHTML = '<div class="empty">Pick a date above to see the day.</div>';
+    return;
+  }
+  try {
+    const bookings = await API.get(`/api/bookings?date=${date}`);
+    const takenSlotIds = new Set(bookings.filter(b => b.status === "confirmed").map(b => b.slot_id));
+    if (allSlots.length === 0) return;
+    preview.innerHTML = allSlots.map(s => {
+      const taken = takenSlotIds.has(s.slot_id);
+      const bk = bookings.find(b => b.slot_id === s.slot_id && b.status === "confirmed");
+      return `<div class="slot-row ${taken ? 'taken' : 'free'}">
+        <span class="name">${s.slot_name} <span style="font-weight:normal;color:var(--ink-soft)">(${s.start_time}–${s.end_time})</span></span>
+        <span class="status">${taken ? `Booked — ${bk.applicant_name} (${bk.purpose || 'no purpose given'})` : 'Free'}</span>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    preview.innerHTML = `<div class="empty">Could not load: ${e.message}</div>`;
+  }
+}
+
+dateInput.addEventListener("change", refreshDayPreview);
+
+// Default the date field to today so the counter clerk sees something immediately.
+dateInput.value = new Date().toISOString().slice(0, 10);
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  hideMsg(formMsg);
+  submitBtn.disabled = true;
+  try {
+    const payload = {
+      applicant_name: document.getElementById("applicant_name").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      address: document.getElementById("address").value.trim(),
+      booking_date: dateInput.value,
+      slot_id: parseInt(slotSelect.value, 10),
+      purpose: document.getElementById("purpose").value.trim(),
+    };
+    const result = await API.post("/api/bookings", payload);
+    showMsg(formMsg, `Booking #${result.booking_id} recorded — ${result.slot_name} on ${result.booking_date}.`, true);
+    form.reset();
+    dateInput.value = payload.booking_date;
+    await refreshDayPreview();
+  } catch (err) {
+    showMsg(formMsg, err.message, false);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+(async () => {
+  await loadSlots();
+  await refreshDayPreview();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deposits — Community Hall Register</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="masthead">
+  <div class="wrap">
+    <div>
+      <h1>Community Hall Register</h1>
+      <div class="sub">Panchayat Office · Deposits Held</div>
+    </div>
+    <nav class="tabs">
+      <a href="index.html">Book</a>
+      <a href="calendar.html">Calendar</a>
+      <a href="deposits.html" class="active">Deposits</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="panel">
+    <h2>Deposits Currently Held</h2>
+    <p class="hint">Each figure is calculated live as (amount taken) − (amount returned) for that booking — never stored as a running balance.</p>
+    <div id="depMsg" class="msg"></div>
+    <table class="deposits">
+      <thead><tr><th>Booking</th><th>Applicant</th><th>Date</th><th>Slot</th><th>Held</th><th></th></tr></thead>
+      <tbody id="depBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Record a Deposit</h2>
+    <div id="txnMsg" class="msg"></div>
+    <div class="field-row">
+      <div>
+        <label for="booking_id">Booking #</label>
+        <input type="number" id="booking_id" min="1">
+      </div>
+      <div>
+        <label for="amount">Amount (₹)</label>
+        <input type="number" id="amount" min="1" step="1">
+      </div>
+    </div>
+    <button id="takeBtn">Record Deposit Taken</button>
+    <button class="secondary" id="returnBtn">Record Deposit Returned</button>
+  </div>
+
+</div>
+
+<footer class="note">SIH 2026 Practical Assessment — Community Hall Booking and Conflict Prevention System</footer>
+
+<script src="js/api.js"></script>
+<script>
+const depBody = document.getElementById("depBody");
+const depMsg = document.getElementById("depMsg");
+const txnMsg = document.getElementById("txnMsg");
+
+async function loadDeposits() {
+  hideMsg(depMsg);
+  try {
+    const rows = await API.get("/api/deposits");
+    if (rows.length === 0) {
+      depBody.innerHTML = `<tr><td colspan="6">No deposits currently held.</td></tr>`;
+      return;
+    }
+    depBody.innerHTML = rows.map(r => `
+      <tr>
+        <td>#${r.booking_id}</td>
+        <td>${r.applicant_name}</td>
+        <td>${fmtDate(r.booking_date)}</td>
+        <td>${r.slot_name}</td>
+        <td class="amount">₹${r.deposit_held}</td>
+        <td><span class="stamp ${r.status}">${r.status}</span></td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    showMsg(depMsg, e.message, false);
+  }
+}
+
+async function doTxn(kind) {
+  hideMsg(txnMsg);
+  const booking_id = parseInt(document.getElementById("booking_id").value, 10);
+  const amount = parseFloat(document.getElementById("amount").value);
+  if (!booking_id || !amount) {
+    showMsg(txnMsg, "Enter a booking number and an amount.", false);
+    return;
+  }
+  try {
+    const result = await API.post(`/api/deposits/${kind}`, { booking_id, amount });
+    showMsg(txnMsg, `Recorded. Booking #${result.booking_id} now holds ₹${result.deposit_held}.`, true);
+    await loadDeposits();
+  } catch (e) {
+    showMsg(txnMsg, e.message, false);
+  }
+}
+
+document.getElementById("takeBtn").addEventListener("click", () => doTxn("take"));
+document.getElementById("returnBtn").addEventListener("click", () => doTxn("return"));
+
+loadDeposits();
+</script>
+</body>
+</html>

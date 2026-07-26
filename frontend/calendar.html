@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendar — Community Hall Register</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="masthead">
+  <div class="wrap">
+    <div>
+      <h1>Community Hall Register</h1>
+      <div class="sub">Panchayat Office · Monthly Calendar</div>
+    </div>
+    <nav class="tabs">
+      <a href="index.html">Book</a>
+      <a href="calendar.html" class="active">Calendar</a>
+      <a href="deposits.html">Deposits</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="panel">
+    <h2>Month at a Glance</h2>
+    <p class="hint">Every confirmed booking for the month. Cancelled bookings are left off — they no longer occupy a slot.</p>
+    <div class="cal-controls">
+      <button class="secondary" id="prevBtn">&larr; Prev</button>
+      <div class="month-label" id="monthLabel"></div>
+      <button class="secondary" id="nextBtn">Next &rarr;</button>
+    </div>
+    <div id="calMsg" class="msg"></div>
+    <table class="cal">
+      <thead><tr><th>Date</th><th>Booked slots</th></tr></thead>
+      <tbody id="calBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel" id="detailPanel" style="display:none;">
+    <h2>Booking Detail</h2>
+    <div id="detailBox"></div>
+  </div>
+
+</div>
+
+<footer class="note">SIH 2026 Practical Assessment — Community Hall Booking and Conflict Prevention System</footer>
+
+<script src="js/api.js"></script>
+<script>
+const monthLabel = document.getElementById("monthLabel");
+const calBody = document.getElementById("calBody");
+const calMsg = document.getElementById("calMsg");
+const detailPanel = document.getElementById("detailPanel");
+const detailBox = document.getElementById("detailBox");
+
+let current = new Date();
+current.setDate(1);
+
+function monthStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+async function loadMonth() {
+  hideMsg(calMsg);
+  monthLabel.textContent = current.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  try {
+    const rows = await API.get(`/api/calendar?month=${monthStr(current)}`);
+    const byDate = {};
+    rows.forEach(r => {
+      (byDate[r.booking_date] = byDate[r.booking_date] || []).push(r);
+    });
+    const dates = Object.keys(byDate).sort();
+    if (dates.length === 0) {
+      calBody.innerHTML = `<tr class="cal-empty-row"><td colspan="2">No confirmed bookings this month.</td></tr>`;
+      return;
+    }
+    calBody.innerHTML = dates.map(date => {
+      const tags = byDate[date].map(b =>
+        `<span class="cal-slot-tag" data-bid="${b.booking_id}" title="Click for detail">${b.slot_name}: ${b.applicant_name}</span>`
+      ).join("");
+      return `<tr><td class="cal-date">${fmtDate(date)}</td><td>${tags}</td></tr>`;
+    }).join("");
+    calBody.querySelectorAll(".cal-slot-tag").forEach(el => {
+      el.style.cursor = "pointer";
+      el.addEventListener("click", () => loadDetail(el.dataset.bid));
+    });
+  } catch (e) {
+    showMsg(calMsg, e.message, false);
+  }
+}
+
+async function loadDetail(bookingId) {
+  detailPanel.style.display = "block";
+  detailBox.innerHTML = "Loading…";
+  try {
+    const b = await API.get(`/api/bookings/${bookingId}`);
+    const stampClass = b.status === "confirmed" ? "confirmed" : "cancelled";
+    detailBox.innerHTML = `
+      <div class="row"><span class="k">Booking #</span><span>${b.booking_id} <span class="stamp ${stampClass}">${b.status}</span></span></div>
+      <div class="row"><span class="k">Applicant</span><span>${b.applicant_name} (${b.phone})</span></div>
+      <div class="row"><span class="k">Date / Slot</span><span>${fmtDate(b.booking_date)} — ${b.slot_name} (${b.start_time}–${b.end_time})</span></div>
+      <div class="row"><span class="k">Purpose</span><span>${b.purpose || "—"}</span></div>
+      <div class="row"><span class="k">Deposit held</span><span>₹${b.deposit_held}</span></div>
+      <div style="margin-top:12px;">
+        ${b.status === "confirmed" ? `<button class="danger" id="cancelBtn">Cancel this booking</button>` : ""}
+      </div>
+    `;
+    if (b.status === "confirmed") {
+      document.getElementById("cancelBtn").addEventListener("click", async () => {
+        if (!confirm(`Cancel booking #${b.booking_id}? This frees the slot for rebooking.`)) return;
+        try {
+          await API.post(`/api/bookings/${b.booking_id}/cancel`);
+          await loadDetail(bookingId);
+          await loadMonth();
+        } catch (e) {
+          alert(e.message);
+        }
+      });
+    }
+  } catch (e) {
+    detailBox.innerHTML = `<div class="msg err show">${e.message}</div>`;
+  }
+}
+
+document.getElementById("prevBtn").addEventListener("click", () => {
+  current.setMonth(current.getMonth() - 1);
+  loadMonth();
+});
+document.getElementById("nextBtn").addEventListener("click", () => {
+  current.setMonth(current.getMonth() + 1);
+  loadMonth();
+});
+
+loadMonth();
+</script>
+</body>
+</html>

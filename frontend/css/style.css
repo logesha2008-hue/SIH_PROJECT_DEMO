@@ -1,0 +1,344 @@
+/* Community Hall Booking — visual theme
+   The subject is a panchayat office register: this is why the palette is
+   ledger-paper and ink, why the calendar reads as ruled rows rather than
+   a grid of cards, and why status is shown as a stamp, not a colored pill. */
+
+:root {
+  --paper: #EFEAD9;
+  --paper-line: #D8CFB4;
+  --ink: #24312B;
+  --ink-soft: #5B6B5F;
+  --stamp-red: #A23E2E;
+  --stamp-green: #3C6E52;
+  --brass: #B4802F;
+  --brass-dark: #8C6222;
+  --white: #FBF9F2;
+  --shadow: rgba(36, 49, 43, 0.18);
+
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-body: 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Courier New', monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px);
+  background-size: 100% 2.1em;
+  background-attachment: local;
+}
+
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+/* ---------- Header / register masthead ---------- */
+
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 22px 0 18px;
+  margin-bottom: 30px;
+  border-bottom: 6px double var(--brass);
+}
+
+.masthead .wrap {
+  padding-bottom: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.masthead h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: normal;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.masthead .sub {
+  font-size: 0.78rem;
+  color: var(--brass);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+nav.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+nav.tabs a {
+  color: var(--paper);
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+}
+
+nav.tabs a.active {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+
+nav.tabs a:hover:not(.active) {
+  border-color: rgba(180, 128, 47, 0.4);
+}
+
+/* ---------- Cards / panels ---------- */
+
+.panel {
+  background: var(--white);
+  border: 1px solid var(--paper-line);
+  box-shadow: 0 2px 0 var(--paper-line);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+}
+
+.panel h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: normal;
+  margin: 0 0 4px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--paper-line);
+  padding-bottom: 10px;
+}
+
+.panel .hint {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin: 6px 0 16px;
+  font-style: italic;
+}
+
+/* ---------- Form ---------- */
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.field-row.single { grid-template-columns: 1fr; }
+
+label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin-bottom: 5px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--paper-line);
+  background: var(--paper);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+  background: var(--white);
+}
+
+button {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+}
+
+button:hover { background: #38473F; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.secondary {
+  background: transparent;
+  color: var(--ink);
+}
+button.secondary:hover { background: var(--paper-line); }
+
+button.danger {
+  border-color: var(--stamp-red);
+  color: var(--stamp-red);
+  background: transparent;
+}
+button.danger:hover { background: rgba(162, 62, 46, 0.08); }
+
+/* ---------- Day-preview strip on the booking screen ---------- */
+
+.day-preview { margin-top: 4px; }
+.day-preview .empty { color: var(--ink-soft); font-size: 0.85rem; font-style: italic; }
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border: 1px solid var(--paper-line);
+  margin-bottom: 6px;
+  font-size: 0.86rem;
+  background: var(--paper);
+}
+
+.slot-row.taken { border-left: 4px solid var(--stamp-red); }
+.slot-row.free { border-left: 4px solid var(--stamp-green); }
+
+.slot-row .name { font-weight: bold; }
+.slot-row .status {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+.slot-row.taken .status { color: var(--stamp-red); }
+.slot-row.free .status { color: var(--stamp-green); }
+
+/* ---------- Messages ---------- */
+
+.msg {
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 0.88rem;
+  border-left: 4px solid;
+  display: none;
+}
+.msg.show { display: block; }
+.msg.ok { background: rgba(60, 110, 82, 0.1); border-color: var(--stamp-green); color: var(--stamp-green); }
+.msg.err { background: rgba(162, 62, 46, 0.1); border-color: var(--stamp-red); color: var(--stamp-red); }
+
+/* ---------- Calendar ---------- */
+
+.cal-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.cal-controls .month-label {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+table.cal {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+table.cal th {
+  text-align: left;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--ink);
+}
+
+table.cal td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--paper-line);
+  vertical-align: top;
+}
+
+table.cal tr:hover td { background: rgba(180, 128, 47, 0.06); }
+
+.cal-date { font-weight: bold; white-space: nowrap; width: 90px; }
+
+.cal-slot-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  margin: 2px 4px 2px 0;
+  border: 1px solid var(--stamp-red);
+  color: var(--stamp-red);
+}
+
+.cal-empty-row td { color: var(--ink-soft); font-style: italic; }
+
+/* ---------- Deposits table ---------- */
+
+table.deposits {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+table.deposits th {
+  text-align: left;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  padding: 8px;
+  border-bottom: 2px solid var(--ink);
+}
+table.deposits td {
+  padding: 8px;
+  border-bottom: 1px solid var(--paper-line);
+}
+table.deposits .amount { font-family: var(--font-mono); font-weight: bold; }
+
+/* ---------- Booking detail / modal-ish inline panel ---------- */
+
+.detail-box {
+  border: 1px dashed var(--brass);
+  padding: 14px 16px;
+  margin-top: 14px;
+  background: rgba(180, 128, 47, 0.05);
+  font-size: 0.86rem;
+}
+.detail-box .row { display: flex; justify-content: space-between; padding: 3px 0; }
+.detail-box .row .k { color: var(--ink-soft); }
+
+.stamp {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: bold;
+  border: 2px solid;
+  padding: 1px 8px;
+  transform: rotate(-3deg);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.stamp.confirmed { color: var(--stamp-green); border-color: var(--stamp-green); }
+.stamp.cancelled { color: var(--stamp-red); border-color: var(--stamp-red); }
+
+footer.note {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  margin-top: 30px;
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .field-row { grid-template-columns: 1fr; }
+  .masthead .wrap { flex-direction: column; align-items: flex-start; }
+}
