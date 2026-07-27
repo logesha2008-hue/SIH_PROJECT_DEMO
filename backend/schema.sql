@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     booking_date  TEXT NOT NULL,               -- YYYY-MM-DD
     slot_id       INTEGER NOT NULL REFERENCES slots(slot_id),
     purpose       TEXT,
+    remarks       TEXT,
     status        TEXT NOT NULL DEFAULT 'confirmed'
                        CHECK (status IN ('confirmed', 'cancelled')),
     created_at    TEXT NOT NULL DEFAULT (datetime('now')),

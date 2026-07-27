@@ -62,6 +62,12 @@
           <input type="text" id="purpose" placeholder="e.g. Wedding, Committee meeting">
         </div>
       </div>
+      <div class="field-row single">
+        <div>
+          <label for="remarks">Remarks (optional)</label>
+          <input type="text" id="remarks" placeholder="e.g. need projector, extra chairs">
+        </div>
+      </div>
       <button type="submit" id="submitBtn">Record Booking</button>
     </form>
   </div>
@@ -111,7 +117,7 @@ async function refreshDayPreview() {
       const bk = bookings.find(b => b.slot_id === s.slot_id && b.status === "confirmed");
       return `<div class="slot-row ${taken ? 'taken' : 'free'}">
         <span class="name">${s.slot_name} <span style="font-weight:normal;color:var(--ink-soft)">(${s.start_time}–${s.end_time})</span></span>
-        <span class="status">${taken ? `Booked — ${bk.applicant_name} (${bk.purpose || 'no purpose given'})` : 'Free'}</span>
+        <span class="status">${taken ? `Booked — ${bk.applicant_name} (${bk.purpose || 'no purpose given'})${bk.remarks ? ` — ${bk.remarks}` : ''}` : 'Free'}</span>
       </div>`;
     }).join("");
   } catch (e) {
@@ -136,6 +142,7 @@ form.addEventListener("submit", async (e) => {
       booking_date: dateInput.value,
       slot_id: parseInt(slotSelect.value, 10),
       purpose: document.getElementById("purpose").value.trim(),
+      remarks: document.getElementById("remarks").value.trim(),
     };
     const result = await API.post("/api/bookings", payload);
     showMsg(formMsg, `Booking #${result.booking_id} recorded — ${result.slot_name} on ${result.booking_date}.`, true);

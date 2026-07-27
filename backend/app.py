@@ -10,7 +10,7 @@ import os
 from datetime import date, datetime
 from flask import Flask, request, jsonify, send_from_directory
 
-from db import get_db, init_db, DB_PATH
+from db import get_db, init_db, migrate_schema, DB_PATH
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 
@@ -95,7 +95,7 @@ def list_bookings_for_date():
     def run():
         conn = get_db()
         rows = conn.execute(
-            """SELECT b.booking_id, b.booking_date, b.status, b.purpose,
+            """SELECT b.booking_id, b.booking_date, b.status, b.purpose, b.remarks,
                       s.slot_id, s.slot_name, s.start_time, s.end_time,
                       a.name AS applicant_name
                FROM bookings b
@@ -148,6 +148,7 @@ def create_booking():
     booking_date = (data.get("booking_date") or "").strip()
     slot_id = data.get("slot_id")
     purpose = (data.get("purpose") or "").strip()
+    remarks = (data.get("remarks") or "").strip()
 
     # ---- server-side validation (the only kind that counts) ----
     if not name:
@@ -207,9 +208,9 @@ def create_booking():
                 applicant_id = cur.lastrowid
 
             cur = conn.execute(
-                """INSERT INTO bookings (applicant_id, booking_date, slot_id, purpose, status)
-                   VALUES (?, ?, ?, ?, 'confirmed')""",
-                (applicant_id, booking_date, slot_id, purpose),
+                """INSERT INTO bookings (applicant_id, booking_date, slot_id, purpose, remarks, status)
+                   VALUES (?, ?, ?, ?, ?, 'confirmed')""",
+                (applicant_id, booking_date, slot_id, purpose, remarks),
             )
             conn.commit()
             booking_id = cur.lastrowid
@@ -221,6 +222,7 @@ def create_booking():
                 "slot_id": slot_id,
                 "slot_name": slot["slot_name"],
                 "status": "confirmed",
+                "remarks": remarks,
             }), 201
 
         except sqlite3.IntegrityError:
@@ -275,7 +277,7 @@ def calendar():
     def run():
         conn = get_db()
         rows = conn.execute(
-            """SELECT b.booking_id, b.booking_date, b.status, b.purpose,
+            """SELECT b.booking_id, b.booking_date, b.status, b.purpose, b.remarks,
                       s.slot_id, s.slot_name, a.name AS applicant_name
                FROM bookings b
                JOIN slots s ON s.slot_id = b.slot_id
@@ -387,4 +389,6 @@ if __name__ == "__main__":
     if not os.path.exists(DB_PATH):
         init_db()
         print(f"Initialized new database at {DB_PATH}")
+    else:
+        migrate_schema()
     app.run(host="0.0.0.0", port=5050, debug=False, threaded=True)

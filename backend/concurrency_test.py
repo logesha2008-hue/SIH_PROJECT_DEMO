@@ -13,15 +13,18 @@ Usage:
 import threading
 import requests
 import sys
+from datetime import date, timedelta
 
 URL = "http://localhost:5050/api/bookings"
 
-# A date/slot combination that is free at the moment this script runs.
-# Uses a fixed test date far in the future so it doesn't collide with seed data.
+# Pick a fresh future booking date so the demo doesn't collide with any
+# earlier seed or test data.
+BOOKING_DATE = (date.today() + timedelta(days=200)).strftime("%Y-%m-%d")
+
 PAYLOAD = {
     "applicant_name": None,   # filled per-thread below
     "phone": "9999911111",
-    "booking_date": "2026-10-10",
+    "booking_date": BOOKING_DATE,
     "slot_id": 2,
     "purpose": "Concurrency test booking",
 }

@@ -28,3 +28,22 @@ def init_db():
         conn.executescript(f.read())
     conn.commit()
     conn.close()
+
+
+def migrate_schema():
+    conn = get_db()
+    try:
+        columns = [row["name"] for row in conn.execute("PRAGMA table_info(bookings)").fetchall()]
+        if "remarks" not in columns:
+            conn.execute("ALTER TABLE bookings ADD COLUMN remarks TEXT")
+
+        conn.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_one_active_booking_per_slot
+            ON bookings (booking_date, slot_id)
+            WHERE status = 'confirmed'
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
