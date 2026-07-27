@@ -26,14 +26,6 @@ This project is a community hall booking system designed to replace the traditio
 
 The app also provides calendar and deposits pages through the same server.
 
-cd backend
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-py seed.py
-py app.py
-
-
 ## Demonstration Video Link (Before making on spot changes)
 https://drive.google.com/file/d/1qeRflVi8F1IIr6gJ4uUC6ww-ZP6_HpKv/view
 
